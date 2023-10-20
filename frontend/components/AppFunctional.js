@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import axios from 'axios';
 
 // önerilen başlangıç stateleri
 const initialMessage = ''
@@ -7,8 +8,13 @@ const initialSteps = 0
 const initialIndex = 4 //  "B" nin bulunduğu indexi
 
 export default function AppFunctional(props) {
+  
     const [idxB, setIdxB] = useState(initialIndex);
     const [cntMove, setCntMove] = useState(initialSteps);
+    const [email, setEmail] = useState(initialEmail);
+    const [message, setMessage] = useState(initialMessage);
+  
+    // AŞAĞIDAKİ HELPERLAR SADECE ÖNERİDİR.
   // Bunları silip kendi mantığınızla sıfırdan geliştirebilirsiniz.
 
   function getXY(idx) {
@@ -88,11 +94,38 @@ export default function AppFunctional(props) {
     if(didMove)
         setCntMove(cnt => cnt + 1);
   }
+
+
+  function onChange(event) {
     // inputun değerini güncellemek için bunu kullanabilirsiniz
+
+    setEmail(event.target.value);
   }
 
-  function onSubmit(evt) {
+  function onSubmit(event) {
     // payloadu POST etmek için bir submit handlera da ihtiyacınız var.
+
+    event.preventDefault();
+    const [x, y] = getXY(idxB);
+    
+    const data = {};
+
+    data.x = x;
+    data.y = y;
+    data.steps = cntMove;
+    data.email = email;
+
+
+    setEmail("");
+
+    axios.post('http://localhost:9000/api/result', data)
+      .then(function (response) {
+        setMessage(response.data.message);
+      })
+      .catch(function (error) {
+        setMessage(error.response.data.message);
+      });
+
   }
 
   return (
@@ -111,7 +144,7 @@ export default function AppFunctional(props) {
         }
       </div>
       <div className="info">
-        <h3 id="message"></h3>
+        <h3 id="message">{message}</h3>
       </div>
       <div id="keypad">
         <button  onClick={() => move("left")} id="left">SOL</button>
@@ -120,8 +153,14 @@ export default function AppFunctional(props) {
         <button  onClick={() => move("down")} id="down">AŞAĞI</button>
         <button  onClick={() => reset()} id="reset">reset</button>
       </div>
-      <form>
-        <input id="email" type="email" placeholder="email girin"></input>
+      <form onSubmit={onSubmit}>
+        <input 
+            id="email"
+            type="email"
+            placeholder="email girin"
+            onChange={onChange}
+            value={email}
+        />
         <input id="submit" type="submit"></input>
       </form>
     </div>
